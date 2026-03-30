@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>MEL CoP Attendance</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#E3DFD7;min-height:100vh}
+.box{max-width:480px;margin:0 auto;min-height:100vh}
+.hdr{background:#FF671B;padding:18px 20px;color:#fff}
+.hdr-sub{font-size:12px;opacity:.8;letter-spacing:1px}
+.hdr-title{font-size:20px;font-weight:700;margin-top:2px}
+.hdr-info{font-size:12px;opacity:.7;margin-top:2px}
+.card{background:#fff;border-radius:14px;padding:20px;margin:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.counters{display:flex;gap:10px;padding:14px 14px 0}
+.counter{flex:1;background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.counter-num{font-size:26px;font-weight:700}
+.counter-label{font-size:12px;color:#6B7280}
+.btn{border:none;border-radius:10px;padding:13px 20px;font-size:15px;font-weight:600;cursor:pointer;width:100%;font-family:Arial;color:#fff;transition:opacity .2s}
+.btn-orange{background:#FF671B}
+.btn-turq{background:#4FCDB0}
+.btn-green{background:#8DB92E}
+.btn-red{background:#DC2626}
+.btn-gray{background:#6B7280}
+.btn:disabled{opacity:.4}
+.inp{width:100%;padding:11px 14px;border:2px solid #e5e5e5;border-radius:10px;font-size:15px;font-family:Arial;outline:none;box-sizing:border-box}
+.inp-code{font-size:22px;text-align:center;letter-spacing:6px;font-weight:700}
+.lbl{font-size:12px;font-weight:600;color:#6B7280;margin-bottom:5px;display:block}
+.err{background:#FEF2F2;color:#DC2626;padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.success-circle{width:64px;height:64px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:32px;color:#8DB92E}
+.mode-btn{flex:1;padding:8px;border:2px solid #e5e5e5;border-radius:8px;background:#fff;color:#6B7280;font-weight:600;font-size:13px;cursor:pointer;font-family:Arial}
+.mode-btn.active{border-color:#FF671B;background:#FFF0E6;color:#FF671B}
+.day-btn{flex:1;padding:14px 10px;border:2px solid #e5e5e5;border-radius:10px;background:#fff;color:#1a1a1a;font-size:15px;font-weight:600;cursor:pointer;font-family:Arial;text-align:center}
+.day-btn.active{border-color:#FF671B;background:#FFF0E6;color:#FF671B}
+.found-card{background:#FFF0E6;border-radius:12px;padding:16px;margin-bottom:18px}
+.found-id{font-size:11px;color:#FF671B;font-weight:600}
+.found-name{font-size:20px;font-weight:700;color:#1a1a1a;margin-top:2px}
+.found-org{font-size:14px;color:#6B7280;margin-top:2px}
+.found-pos{font-size:12px;color:#6B7280;margin-top:2px}
+.prev-sign{background:#F0FDF4;padding:10px;border-radius:8px;font-size:13px;color:#8DB92E;margin-bottom:12px}
+.result-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0}
+.result-item:hover{background:#FFF0E6}
+.result-item:last-child{border-bottom:none}
+.result-name{font-weight:600;font-size:14px;color:#1a1a1a}
+.result-meta{font-size:12px;color:#6B7280}
+.sig-wrap{border:2px solid #ddd;border-radius:12px;overflow:hidden;position:relative;touch-action:none}
+.sig-wrap.signed{border-color:#8DB92E}
+.sig-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#ccc;font-size:15px;pointer-events:none}
+.back-btn{background:none;border:none;color:#fff;font-size:13px;cursor:pointer;padding:0}
+.badge{display:inline-block;padding:5px 14px;border-radius:16px;font-size:13px;font-weight:600;margin-top:10px}
+.mb8{margin-bottom:8px}.mb10{margin-bottom:10px}.mb12{margin-bottom:12px}.mb14{margin-bottom:14px}.mb16{margin-bottom:16px}.mb18{margin-bottom:18px}
+.flex{display:flex}.gap6{gap:6px}.gap8{gap:8px}.gap10{gap:10px}
+.tcenter{text-align:center}
+.hidden{display:none}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:6px}
+th{text-align:left;background:#f3f4f6}
+td{border-bottom:1px solid #f0f0f0}
+</style>
+</head>
+<body>
+<div class="box" id="app"></div>
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzZAaK8FbQk63LlgFfa46CTWyn0WA90KJR3uUP3U0FApX9axevZ3aoxxqLcPcc33f2_Yw/exec";
+const P=[
+{id:"MEL-001",name:"Innocent Kodzo Awumey",sex:"Male",org:"Absa Bank Ghana Ltd",prog:"Absa Young Africa Works",pos:"Program Manager",email:"innocentkodzo.awumey@absa.africa",phone:"0242510598"},
+{id:"MEL-002",name:"Agnes Atanga",sex:"Female",org:"Academic Success Foundation",prog:"The Academic Success Mentorship and Career Guidance Program",pos:"Executive Director",email:"atangaagnes@gmail.com",phone:"0246379421"},
+{id:"MEL-003",name:"Michael T. Martey",sex:"Male",org:"Access Bank",prog:"Bridge-In Agric",pos:"MEL Specialist",email:"marteym@accessbankplc.com",phone:"0546271095"},
+{id:"MEL-004",name:"Gabriel Addai Duah",sex:"Male",org:"Africa Skills Hub",prog:"BIA",pos:"Project Lead",email:"gabriel.duah@africaskillshub.co",phone:"+233243379524"},
+{id:"MEL-005",name:"Christian Anawoe",sex:"Male",org:"Africa Skills Hub",prog:"BRIDGE in Agriculture",pos:"MEL Manager",email:"Christian.anawoe@africaskillshub.co",phone:"0242648582"},
+{id:"MEL-006",name:"Prince Oppong Kwarteng",sex:"Male",org:"African Management Institute",prog:"FIRST +II",pos:"Country Representative & Programme Lead",email:"prince@africanmanagers.com",phone:"0593798464"},
+{id:"MEL-007",name:"John Jagwe",sex:"Male",org:"AGRA",prog:"",pos:"Country Programs Lead",email:"JJagwe@agra.org",phone:"+233593987914"},
+{id:"MEL-008",name:"Shamsudeen Alhassan",sex:"Male",org:"AGRA",prog:"",pos:"In-Country M&E Officer",email:"SAlhassan@agra.org",phone:"0242782988"},
+{id:"MEL-009",name:"Nana Kofi Riverson",sex:"Male",org:"Agri-Impact Limited",prog:"HAPPY",pos:"MEL Lead",email:"nriverson@agriimpactgroup.com",phone:"0244819433"},
+{id:"MEL-010",name:"Larry Selorm Amekuse",sex:"Male",org:"Agri-Impact Limited",prog:"HAPPY Program",pos:"Program Manager",email:"lamekuse@agriimpactgroup.com",phone:"0244864372"},
+{id:"MEL-011",name:"Annabelle Afua Brofoyedru",sex:"Female",org:"Agri-Impact Limited",prog:"HAPPY",pos:"MEL officer",email:"abrofoyedru@agriimpactgroup.com",phone:"0544187852"},
+{id:"MEL-012",name:"Gordon Abban",sex:"Male",org:"Agri-Impact Limited (PMU)",prog:"HAPPY",pos:"MEL Officer",email:"gabban@agriimpactgroup.com",phone:"0247457275"},
+{id:"MEL-013",name:"Abigail Afuah Bimah Awuah",sex:"Female",org:"Ashesi University",prog:"Nkabom Agri-food and Nutrition collaborative",pos:"Project officer",email:"aawuah@ashesi.edu.gh",phone:"0244995405"},
+{id:"MEL-014",name:"Francis Osei Kusi",sex:"Male",org:"Association of Ghana Industries",prog:"Nkabom Collaborative Project",pos:"Learning and Monitoring Specialist",email:"owigya1952@gmail.com",phone:"+233243373602"},
+{id:"MEL-015",name:"Bernard Cudjoe",sex:"Male",org:"AV Ventures LLC",prog:"FILMA Program",pos:"M&E Officer",email:"bcudjoe@av-ventures.com",phone:"0540113977"},
+{id:"MEL-016",name:"Thompson Abagna",sex:"Male",org:"CapPlus",prog:"FIRST +II",pos:"MERL Manager",email:"tabagna@capplus.org",phone:"0244657254"},
+{id:"MEL-017",name:"Daniel Yakuba",sex:"Male",org:"Catholic Relief Service",prog:"FILMA",pos:"MEAL Manager",email:"daniel.yakuba@crs.org",phone:"0242729557"},
+{id:"MEL-018",name:"Ama Kyerewaa Afful",sex:"Female",org:"Coalition for Positive Impact",prog:"Igniting Dreams",pos:"MEL officer",email:"agikyereama@cpimpact.org",phone:"0553140897"},
+{id:"MEL-019",name:"Isam Nuhu",sex:"Male",org:"Coalition for Positive Impact",prog:"Igniting Dreams",pos:"Project Associate",email:"nusams6@cpimpact.org",phone:"054766215"},
+{id:"MEL-020",name:"Kwaku Yeboah",sex:"Male",org:"CrossBoundary",prog:"BRIDGE-in Agriculture",pos:"MEL Officer",email:"kwaku.yeboah@crossboundary.com",phone:"+233555721410"},
+{id:"MEL-021",name:"James Nat Afful",sex:"Male",org:"Ecobank",prog:"Bridge In Agricultural",pos:"M&E Officer",email:"jafful@ecobank.com",phone:"247077743"},
+{id:"MEL-022",name:"Mary Dziedzorm Afenyo",sex:"Female",org:"Farmerline",prog:"CapPlus Program",pos:"Senior Project Manager",email:"mary@farmerline.co",phone:"0266456192"},
+{id:"MEL-023",name:"Karen Amadi Akotuah",sex:"Female",org:"Fidelity Bank Ghana",prog:"BRIDGE-in Agriculture",pos:"Monitoring and Evaluation Officer",email:"kaakotuah@myfidelitybank.net",phone:"0209454766"},
+{id:"MEL-024",name:"GLORIA DUGAH",sex:"Female",org:"FIRST NATIONAL BANK",prog:"BRIDGE-IN AGRICULTURE",pos:"M&E MANAGER",email:"GDugah@firstnationalbank.com.gh",phone:"0243657583"},
+{id:"MEL-025",name:"Daniel Anyetewen",sex:"Male",org:"Generation",prog:"GROW",pos:"Data and Impact Associate",email:"daniel.anyetewen@generation.org",phone:"0547342876"},
+{id:"MEL-026",name:"Dr. Vandyck Lomotey",sex:"Male",org:"Generation Ghana",prog:"GROW",pos:"Program Director",email:"vandyck.lomotey@generation.org",phone:"+233506480003"},
+{id:"MEL-027",name:"Eric Debrah Otchere",sex:"Male",org:"Generation, Ghana",prog:"GROW",pos:"Learning and Teaching Manager",email:"ericdebrah.otchere@generation.org",phone:"0507262957"},
+{id:"MEL-028",name:"Benedictus Agbenyo",sex:"Male",org:"GIRSAL LTD",prog:"FIRST +II",pos:"M&E Manager",email:"benedictus.agbenyo@girsal.com",phone:"0506517191"},
+{id:"MEL-029",name:"Josephine Awinpoka Akumbuno",sex:"Female",org:"HOPin Foundation",prog:"Empowering Youth With Accredited Trade Skills",pos:"Project Coordinator",email:"awinpoka@hopinacademy.org",phone:"0540308103"},
+{id:"MEL-030",name:"Richmond Anane",sex:"Male",org:"HOPin Foundation",prog:"Empowering youth with accredited skills",pos:"MEL Officer",email:"richmond@hopinacademy.org",phone:"0246881417"},
+{id:"MEL-031",name:"MURPHY EDRO",sex:"Male",org:"Jobberman Ghana",prog:"HAPPY",pos:"MERL Lead",email:"redro@jobberman.com.gh",phone:"0244061508"},
+{id:"MEL-032",name:"Charles Oduro",sex:"Male",org:"KNUST",prog:"Nkabom Collaborative - KNUST",pos:"Head of MEL",email:"cyoduro.cap@knust.edu.gh",phone:"+233201376089"},
+{id:"MEL-033",name:"Charlotte Adjanor-Doku",sex:"Female",org:"KNUST",prog:"Nkabom Collaborative",pos:"Programme Manager",email:"cadjanor-doku@knust.edu.gh",phone:"0555023755"},
+{id:"MEL-034",name:"Clara Atsu-Djadou",sex:"Female",org:"Kosmos Innovation Center",prog:"IYAT",pos:"MEL Manager",email:"catsu-djadou@kicghana.org",phone:"0593845658"},
+{id:"MEL-035",name:"Wisdom Attamah",sex:"Male",org:"Mastercard Foundation",prog:"",pos:"Partner- Inclusion",email:"wattamah@mastercardfdn.org",phone:"0249522696"},
+{id:"MEL-036",name:"Terence Kamuoye Tienaah",sex:"Female",org:"Mastercard Foundation",prog:"Inclusion",pos:"Lead Youth Engagement",email:"ttienaah@mastercardfdn.org",phone:"0256467327"},
+{id:"MEL-037",name:"Enoch Amankwah Konadu",sex:"Male",org:"McGill University",prog:"Nkabom Collaborative",pos:"MEL Consultant",email:"enoch.amankwahkonadu@affiliate.mcgill.ca",phone:"0246742153"},
+{id:"MEL-038",name:"Bodua-Mango Kenneth",sex:"Male",org:"METSS",prog:"",pos:"Program coordinator - Operations",email:"kbmango@metssghana.org",phone:"0551281934"},
+{id:"MEL-039",name:"Samson Konlan",sex:"Male",org:"METSS LBG",prog:"",pos:"PMS-MEL Capacity Building/CLA",email:"skonlan@metssghana.org",phone:"0245392353"},
+{id:"MEL-040",name:"Adams Saaka",sex:"Male",org:"METSS LBG",prog:"A2F M&L Program",pos:"Program Director",email:"sadams@metssghana.org",phone:"0244707403"},
+{id:"MEL-041",name:"Adwoa Mensima Sey",sex:"Female",org:"METSS LBG",prog:"A2F M&L Shared Service Support Program",pos:"Program Management Specialist",email:"asey@metssghana.org",phone:"0208893103"},
+{id:"MEL-042",name:"Eva Adomaa Kyereboah",sex:"Female",org:"METSS LBG",prog:"A2F M&L Shared Service Support Program",pos:"Program specialist- Research and Analysis",email:"ekyereboah@metssghana.org",phone:"+233244076681"},
+{id:"MEL-043",name:"Wendy P.D.W. Martey",sex:"Female",org:"METSS LBG",prog:"A2F M&L Shared Service Support Program",pos:"Senior Program Specialist",email:"wmartey@metsslbg.org",phone:"0541740954"},
+{id:"MEL-044",name:"Joana Anang",sex:"Female",org:"Newage Agric Solutions Ltd",prog:"HAPPY",pos:"M&E officer",email:"joana.anang@newageagric.com",phone:"0541679727"},
+{id:"MEL-045",name:"Samuel Fant Kombian",sex:"Male",org:"Opportunity International",prog:"FIRST+ II Program",pos:"MEL Manager",email:"skombian@opportunity.org",phone:"0208096889"},
+{id:"MEL-046",name:"Samuel Tagoe",sex:"Male",org:"Stanbic Bank",prog:"BRIDGE-IN AGRIC",pos:"M&E Specialist",email:"TagoeS@stanbic.com.gh",phone:"0256494041"},
+{id:"MEL-047",name:"Anthony Dotey",sex:"Male",org:"Temple Investment",prog:"FILMA",pos:"MEL Officer",email:"anthony.dotey@templeinvest.com",phone:"0263035758"},
+{id:"MEL-048",name:"Chanimbe Benamba",sex:"Male",org:"Temple Investment",prog:"FILMA",pos:"MEL Lead",email:"chanimbe.benamba@templeinvest.com",phone:"0248861883"},
+{id:"MEL-049",name:"Margarita Lopez Garcia",sex:"Female",org:"Temple Investments",prog:"FILMA",pos:"Program Manager",email:"margarita.lopez@templeinvest.com",phone:"0559604621"},
+{id:"MEL-050",name:"Joshua Ayew Atanga",sex:"Male",org:"The Academic Success Foundation",prog:"The Academic Success Mentorship program",pos:"MERL Officer",email:"joshuaatanga794@gmail.com",phone:"0594306663"},
+{id:"MEL-051",name:"Apeeliga Joseph",sex:"Male",org:"WUSC - Ghana",prog:"ACTIVATE Project",pos:"Project Director",email:"japeeliga@wusc.ca",phone:"0244425394"},
+{id:"MEL-052",name:"Doris Awortwi - Tandoh",sex:"Female",org:"Zenith Bank Ghana Limited",prog:"BRIDGE-in-Agriculture",pos:"M&E Officer",email:"doris.awortwi-tandoh@zenithbank.com.gh",phone:"0540460023"},
+{id:"MEL-053",name:"Dr. Gideon Hosu-Porbley",sex:"Male",org:"Ashesi University",prog:"Nkabom",pos:"MELA Lead",email:"gporbley@ashesi.edu",phone:"+233244297183"},
+{id:"MEL-054",name:"Gladys Quarshie",sex:"Female",org:"WUSC",prog:"ACTIVATE",pos:"ATVET Intervention Manager",email:"gquarshie@wusc.ca",phone:"0244233592"},
+{id:"MEL-055",name:"Nana Adwoa Konadu",sex:"Female",org:"METSS LBG",prog:"A2F M&L Shared services support program",pos:"Program specialist, MEL",email:"nkonadu@metssghana.org",phone:"0244276974"},
+{id:"MEL-056",name:"Elikplim Dzrekey",sex:"Female",org:"WUSC",prog:"ACTIVATE Project",pos:"GESI & Safeguarding Advisor",email:"edzrekey@wusc.ca",phone:"0509149039"}
+];
+
+let subs=JSON.parse(localStorage.getItem("mel_att_v5")||"[]");
+let screen="home",found=null,day="",sig=null,mode="code",sending=false,showAdmin=false,tapN=0,tapTimer=null;
+const $=id=>document.getElementById(id);
+const dc=d=>subs.filter(s=>s.day===d).length;
+const saveSubs=()=>localStorage.setItem("mel_att_v5",JSON.stringify(subs));
+
+async function sendToSheet(entry){
+  try{await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(entry)});return true}catch(e){return false}
+}
+
+// Signature pad
+let sigCanvas,sigCtx,sigDrawing=false,sigSigned=false;
+function initSig(){
+  sigCanvas=document.querySelector("#sigPad canvas");
+  if(!sigCanvas)return;
+  const w=sigCanvas.parentElement.getBoundingClientRect().width;
+  sigCanvas.width=w;sigCanvas.height=150;
+  sigCtx=sigCanvas.getContext("2d");
+  sigCtx.fillStyle="#fafafa";sigCtx.fillRect(0,0,w,150);
+  sigCtx.strokeStyle="#1a1a1a";sigCtx.lineWidth=2.5;sigCtx.lineCap="round";
+  sigDrawing=false;sigSigned=false;sig=null;
+  const gp=e=>{const r=sigCanvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}};
+  const sd=e=>{e.preventDefault();sigDrawing=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y)};
+  const mv=e=>{if(!sigDrawing)return;e.preventDefault();const p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();sigSigned=true;
+    sigCanvas.parentElement.style.borderColor="#8DB92E";const h=sigCanvas.parentElement.querySelector(".sig-hint");if(h)h.style.display="none"};
+  const ed=()=>{sigDrawing=false;if(sigSigned)sig=sigCanvas.toDataURL()};
+  sigCanvas.onmousedown=sd;sigCanvas.onmousemove=mv;sigCanvas.onmouseup=ed;sigCanvas.onmouseleave=ed;
+  sigCanvas.ontouchstart=sd;sigCanvas.ontouchmove=mv;sigCanvas.ontouchend=ed;
+}
+function clearSig(){
+  if(!sigCanvas)return;
+  sigCtx.fillStyle="#fafafa";sigCtx.fillRect(0,0,sigCanvas.width,sigCanvas.height);
+  sigSigned=false;sig=null;
+  sigCanvas.parentElement.style.borderColor="#ddd";
+  const h=sigCanvas.parentElement.querySelector(".sig-hint");if(h)h.style.display="block";
+}
+
+function render(){
+  const app=$("app");
+  if(screen==="home"){
+    app.innerHTML=`
+      <div class="hdr" id="hdrTap">
+        <div class="hdr-sub">MASTERCARD FOUNDATION</div>
+        <div class="hdr-title">Ghana MEL CoP Convening</div>
+        <div class="hdr-info">${P.length} registered · Live sync to Google Sheets</div>
+      </div>
+      <div class="counters">
+        <div class="counter"><div class="counter-num" style="color:#FF671B">${dc("Day 1")}</div><div class="counter-label">Day 1</div></div>
+        <div class="counter"><div class="counter-num" style="color:#4FCDB0">${dc("Day 2")}</div><div class="counter-label">Day 2</div></div>
+        <div class="counter"><div class="counter-num" style="color:#8DB92E">${subs.filter(s=>s.type==="walk-in").length}</div><div class="counter-label">Walk-ins</div></div>
+      </div>
+      <div class="card">
+        <div style="font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:14px">Sign Attendance</div>
+        <div class="flex gap6 mb14">
+          <button class="mode-btn ${mode==="code"?"active":""}" onclick="mode='code';render()">By Code</button>
+          <button class="mode-btn ${mode==="search"?"active":""}" onclick="mode='search';render()">By Name</button>
+        </div>
+        ${mode==="code"?`
+          <div class="mb10"><label class="lbl">Participant Code (e.g. 1, 01, or MEL-001)</label>
+          <input class="inp inp-code" id="codeInp" placeholder="001" maxlength="10"></div>
+          <div id="errMsg"></div>
+          <button class="btn btn-orange mb10" onclick="doLookup()">Find Me</button>
+        `:`
+          <div class="mb10"><label class="lbl">Search by name or organization</label>
+          <input class="inp" id="searchInp" placeholder="Type name or organization..."></div>
+          <div id="errMsg"></div>
+          <button class="btn btn-orange mb10" onclick="doSearch()">Search</button>
+          <div id="results"></div>
+        `}
+        <div class="tcenter" style="color:#6B7280;font-size:13px;margin:6px 0">or</div>
+        <button class="btn btn-turq" onclick="screen='walkin';day='';sig=null;render()">New Participant (Walk-in)</button>
+      </div>
+      ${showAdmin?`
+      <div class="card">
+        <div style="font-size:15px;font-weight:700;margin-bottom:10px">Admin Panel</div>
+        <div style="font-size:13px;color:#6B7280;margin-bottom:12px">${subs.length} signatures | Day 1: ${dc("Day 1")} | Day 2: ${dc("Day 2")} | Walk-ins: ${subs.filter(s=>s.type==="walk-in").length}</div>
+        <button class="btn btn-green mb8" onclick="doExport()">Export CSV (backup)</button>
+        <button class="btn btn-red" onclick="if(confirm('Clear ALL local data?')){subs=[];localStorage.removeItem('mel_att_v5');render()}">Clear Local Data</button>
+        ${subs.length?`<div style="margin-top:12px;max-height:300px;overflow-y:auto;border:1px solid #e5e5e5;border-radius:8px">
+          <table><thead><tr><th>Name</th><th style="text-align:center">Day</th><th style="text-align:center">Type</th><th>Time</th></tr></thead>
+          <tbody>${subs.map(s=>`<tr><td>${s.name}</td><td style="text-align:center">${s.day}</td><td style="text-align:center;color:${s.type==="walk-in"?"#4FCDB0":"#FF671B"}">${s.type==="walk-in"?"W":"R"}</td><td style="font-size:11px">${s.time}</td></tr>`).join("")}</tbody></table></div>`:""}
+      </div>`:""}`;
+    $("hdrTap").onclick=()=>{tapN++;if(tapN>=5){showAdmin=!showAdmin;tapN=0;render()}clearTimeout(tapTimer);tapTimer=setTimeout(()=>tapN=0,2000)};
+    const ci=mode==="code"?$("codeInp"):$("searchInp");
+    if(ci){ci.focus();ci.onkeydown=e=>{if(e.key==="Enter"){mode==="code"?doLookup():doSearch()}}}
+  }
+  else if(screen==="confirm"){
+    const prev=subs.filter(s=>s.name.toLowerCase()===found.name.toLowerCase());
+    app.innerHTML=`
+      <div class="hdr"><button class="back-btn" onclick="screen='home';found=null;day='';sig=null;render()">&larr; Back</button><div style="font-size:18px;font-weight:700;margin-top:6px">Confirm & Sign</div></div>
+      <div class="card">
+        <div class="found-card"><div class="found-id">${found.id}</div><div class="found-name">${found.name}</div><div class="found-org">${found.org}</div><div class="found-pos">${found.pos}${found.prog?" · "+found.prog:""}</div></div>
+        ${prev.length?`<div class="prev-sign">Already signed: ${prev.map(s=>s.day).join(", ")}</div>`:""}
+        <div class="mb14"><label class="lbl">Select Day <span style="color:#DC2626">*</span></label>
+          <div class="flex gap10"><button class="day-btn ${day==="Day 1"?"active":""}" onclick="day='Day 1';render()"><div style="font-size:11px;opacity:.6">Select</div>Day 1</button><button class="day-btn ${day==="Day 2"?"active":""}" onclick="day='Day 2';render()"><div style="font-size:11px;opacity:.6">Select</div>Day 2</button></div></div>
+        <div class="mb14"><label class="lbl">Sign to confirm attendance <span style="color:#DC2626">*</span></label>
+          <div id="sigPad"><div class="sig-wrap"><canvas style="display:block;width:100%;cursor:crosshair"></canvas><div class="sig-hint">Sign here</div></div>
+          <button onclick="clearSig()" style="margin-top:6px;padding:5px 14px;background:none;border:1px solid #ddd;border-radius:8px;font-size:12px;color:#6B7280;cursor:pointer">Clear</button></div></div>
+        <div id="errMsg"></div>
+        <button class="btn btn-orange" id="submitBtn" onclick="doSubmit()">Confirm Attendance</button>
+      </div>`;
+    setTimeout(initSig,50);
+  }
+  else if(screen==="walkin"){
+    const flds=[{k:"name",l:"Full Name",req:1},{k:"sex",l:"Sex",t:"sel",req:1},{k:"org",l:"Organization",req:1},{k:"prog",l:"Program Name",req:1},{k:"pos",l:"Position",req:1},{k:"email",l:"Email",t:"email",req:1},{k:"phone",l:"Phone Number",t:"tel",req:1},{k:"melQ",l:"MEL Question",t:"ta",req:0}];
+    app.innerHTML=`
+      <div class="hdr"><button class="back-btn" onclick="screen='home';day='';sig=null;render()">&larr; Back</button><div style="font-size:18px;font-weight:700;margin-top:6px">New Participant</div></div>
+      <div class="card">
+        ${flds.map(f=>`<div class="mb12"><label class="lbl">${f.l} ${f.req?'<span style="color:#DC2626">*</span>':""}</label>
+          ${f.t==="sel"?`<div class="flex gap8"><button class="day-btn" id="sexM" onclick="document.getElementById('sexM').classList.add('active');document.getElementById('sexF').classList.remove('active')">Male</button><button class="day-btn" id="sexF" onclick="document.getElementById('sexF').classList.add('active');document.getElementById('sexM').classList.remove('active')">Female</button></div>`
+          :f.t==="ta"?`<textarea class="inp" id="wi_${f.k}" style="min-height:70px;resize:vertical"></textarea>`
+          :`<input class="inp" type="${f.t||"text"}" id="wi_${f.k}">`}</div>`).join("")}
+        <div class="mb12"><label class="lbl">Day <span style="color:#DC2626">*</span></label>
+          <div class="flex gap8"><button class="day-btn ${day==="Day 1"?"active":""}" id="wd1" onclick="day='Day 1';document.getElementById('wd1').classList.add('active');document.getElementById('wd2').classList.remove('active')">Day 1</button><button class="day-btn ${day==="Day 2"?"active":""}" id="wd2" onclick="day='Day 2';document.getElementById('wd2').classList.add('active');document.getElementById('wd1').classList.remove('active')">Day 2</button></div></div>
+        <div class="mb12"><label class="lbl">Signature <span style="color:#DC2626">*</span></label>
+          <div id="sigPad"><div class="sig-wrap"><canvas style="display:block;width:100%;cursor:crosshair"></canvas><div class="sig-hint">Sign here</div></div>
+          <button onclick="clearSig()" style="margin-top:6px;padding:5px 14px;background:none;border:1px solid #ddd;border-radius:8px;font-size:12px;color:#6B7280;cursor:pointer">Clear</button></div></div>
+        <div id="errMsg"></div>
+        <button class="btn btn-orange" id="submitBtn" onclick="doWalkinSubmit()">Submit & Sign</button>
+      </div>`;
+    setTimeout(initSig,50);
+  }
+  else if(screen==="success"){
+    const last=subs[subs.length-1];
+    app.innerHTML=`
+      <div class="hdr" style="background:#8DB92E"><div style="font-size:20px;font-weight:700">Attendance Confirmed</div><div style="font-size:12px;opacity:.8;margin-top:4px">Saved to Google Sheets</div></div>
+      <div class="card"><div class="tcenter" style="margin-bottom:20px">
+        <div class="success-circle">&#10003;</div>
+        <div style="font-size:20px;font-weight:700;color:#1a1a1a">${last.name}</div>
+        <div style="font-size:14px;color:#6B7280">${last.org}</div>
+        <div class="badge" style="background:${last.day==="Day 1"?"#FFF0E6":"#E0F7FA"};color:${last.day==="Day 1"?"#FF671B":"#4FCDB0"}">${last.day} Signed &#10003;</div>
+      </div>
+      <button class="btn btn-orange" onclick="screen='home';found=null;day='';sig=null;mode='code';render()">Next Participant</button></div>`;
+  }
+}
+
+function showErr(msg){const e=$("errMsg");if(e)e.innerHTML=msg?`<div class="err">${msg}</div>`:""}
+
+function doLookup(){
+  const v=($("codeInp")||{}).value||"";
+  const t=v.trim().toUpperCase();
+  if(!t){showErr("Enter a code");return}
+  const num=parseInt(t.replace(/\D/g,""),10);
+  const m=P.find(p=>parseInt(p.id.replace(/\D/g,""),10)===num);
+  if(m){found=m;screen="confirm";day="";sig=null;render()}
+  else showErr('Code "'+t+'" not found. Try name search.');
+}
+
+function doSearch(){
+  const v=($("searchInp")||{}).value||"";
+  const t=v.trim().toLowerCase();
+  if(t.length<2){showErr("Type at least 2 characters");return}
+  const r=P.filter(p=>p.name.toLowerCase().includes(t)||p.org.toLowerCase().includes(t));
+  const rd=$("results");
+  if(!r.length){showErr("No match. Try different spelling or register as walk-in.");if(rd)rd.innerHTML="";return}
+  showErr("");
+  if(rd)rd.innerHTML=`<div style="max-height:250px;overflow-y:auto;border:1px solid #e5e5e5;border-radius:10px">${r.map((p,i)=>`<div class="result-item" onclick="found=P[${P.indexOf(p)}];screen='confirm';day='';sig=null;render()"><div class="result-name">${p.name}</div><div class="result-meta">${p.id} · ${p.org}</div></div>`).join("")}</div>`;
+}
+
+async function doSubmit(){
+  if(!day){showErr("Select the day");return}
+  if(!sig){showErr("Please sign");return}
+  if(subs.some(s=>s.name.toLowerCase()===found.name.toLowerCase()&&s.day===day)){showErr(found.name+" already signed for "+day);return}
+  const b=$("submitBtn");if(b){b.textContent="Saving...";b.disabled=true}
+  const entry={pid:found.id,name:found.name,org:found.org,sex:found.sex,prog:found.prog,pos:found.pos,email:found.email,phone:found.phone,day,type:"registered",time:new Date().toLocaleString("en-GB",{timeZone:"Africa/Accra"})};
+  await sendToSheet(entry);
+  subs.push(entry);saveSubs();screen="success";render();
+}
+
+async function doWalkinSubmit(){
+  const g=id=>($(id)||{}).value||"";
+  const sex=$("sexM")&&$("sexM").classList.contains("active")?"Male":$("sexF")&&$("sexF").classList.contains("active")?"Female":"";
+  const w={name:g("wi_name"),sex,org:g("wi_org"),prog:g("wi_prog"),pos:g("wi_pos"),email:g("wi_email"),phone:g("wi_phone"),melQ:g("wi_melQ")};
+  if(!w.name||!w.sex||!w.org||!w.prog||!w.pos||!w.email||!w.phone){showErr("Fill all required fields");return}
+  if(!day){showErr("Select the day");return}
+  if(!sig){showErr("Please sign");return}
+  if(subs.some(s=>s.name.toLowerCase()===w.name.toLowerCase()&&s.day===day)){showErr(w.name+" already signed for "+day);return}
+  const b=$("submitBtn");if(b){b.textContent="Saving...";b.disabled=true}
+  const entry={pid:"W-"+String(subs.filter(s=>s.pid.startsWith("W-")).length+1).padStart(3,"0"),name:w.name,org:w.org,sex:w.sex,prog:w.prog,pos:w.pos,email:w.email,phone:w.phone,day,type:"walk-in",time:new Date().toLocaleString("en-GB",{timeZone:"Africa/Accra"})};
+  await sendToSheet(entry);
+  subs.push(entry);saveSubs();screen="success";render();
+}
+
+function doExport(){
+  if(!subs.length)return;
+  const k=["pid","name","org","sex","prog","pos","email","phone","day","time","type"];
+  const csv=[k.join(","),...subs.map(s=>k.map(c=>'"'+(s[c]||"").replace(/"/g,'""')+'"').join(","))].join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="mel_cop_attendance_"+new Date().toISOString().split("T")[0]+".csv";a.click();
+}
+
+render();
+</script>
+</body>
+</html>
