@@ -10,7 +10,8 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#E3DFD7;min-height:100vh}
 .box{max-width:480px;margin:0 auto;min-height:100vh}
-.hdr{background:#FF671B;padding:18px 20px;color:#fff}
+.banner{width:100%;display:block;border-radius:14px 14px 0 0}
+.hdr{background:#FF671B;padding:18px 20px;color:#fff;border-radius:0}
 .hdr-sub{font-size:12px;opacity:.8;letter-spacing:1px}
 .hdr-title{font-size:20px;font-weight:700;margin-top:2px}
 .hdr-info{font-size:12px;opacity:.7;margin-top:2px}
@@ -124,7 +125,9 @@ const P=[
 {id:"MEL-056",name:"Elikplim Dzrekey",sex:"Female",org:"WUSC",prog:"ACTIVATE Project",pos:"GESI & Safeguarding Advisor",email:"edzrekey@wusc.ca",phone:"0509149039"}
 ];
 
-let subs=JSON.parse(localStorage.getItem("mel_att_v5")||"[]");
+let subs=[];
+["mel_att_v5","mel_att_v4","mel_att_v3","mel_cop_subs_v2"].forEach(k=>{try{const d=JSON.parse(localStorage.getItem(k)||"[]");d.forEach(s=>{if(!subs.some(x=>x.name===s.name&&x.day===s.day))subs.push(s)})}catch(e){}});
+if(subs.length)localStorage.setItem("mel_att_v5",JSON.stringify(subs));
 let screen="home",found=null,day="",sig=null,mode="code",sending=false,showAdmin=false,tapN=0,tapTimer=null;
 const $=id=>document.getElementById(id);
 const dc=d=>subs.filter(s=>s.day===d).length;
@@ -165,6 +168,7 @@ function render(){
   const app=$("app");
   if(screen==="home"){
     app.innerHTML=`
+      <img src="COP_Reg_header-05.jpg" class="banner" alt="Mastercard Foundation">
       <div class="hdr" id="hdrTap">
         <div class="hdr-sub">MASTERCARD FOUNDATION</div>
         <div class="hdr-title">Ghana MEL CoP Convening</div>
