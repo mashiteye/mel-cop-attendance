@@ -304,7 +304,7 @@ async function doSubmit(){
   if(!sig){showErr("Please sign");return}
   if(subs.some(s=>s.name.toLowerCase()===found.name.toLowerCase()&&s.day===day)){showErr(found.name+" already signed for "+day);return}
   const b=$("submitBtn");if(b){b.textContent="Saving...";b.disabled=true}
-  const entry={pid:found.id,name:found.name,org:found.org,sex:found.sex,prog:found.prog,pos:found.pos,email:found.email,phone:found.phone,day,type:found._walkin?"walk-in":"registered",time:new Date().toLocaleString("en-GB",{timeZone:"Africa/Accra"})};
+  const entry={pid:found.id,name:found.name,org:found.org,sex:found.sex,prog:found.prog,pos:found.pos,email:found.email,phone:found.phone,day,type:found._walkin?"walk-in":"registered",time:new Date().toLocaleString("en-GB",{timeZone:"Africa/Accra"}),sig:sig};
   await sendToSheet(entry);
   subs.push(entry);saveSubs();screen="success";render();
 }
@@ -318,7 +318,7 @@ async function doWalkinSubmit(){
   if(!sig){showErr("Please sign");return}
   if(subs.some(s=>s.name.toLowerCase()===w.name.toLowerCase()&&s.day===day)){showErr(w.name+" already signed for "+day);return}
   const b=$("submitBtn");if(b){b.textContent="Saving...";b.disabled=true}
-  const entry={pid:"W-"+String(subs.filter(s=>s.pid.startsWith("W-")).length+1).padStart(3,"0"),name:w.name,org:w.org,sex:w.sex,prog:w.prog,pos:w.pos,email:w.email,phone:w.phone,day,type:"walk-in",time:new Date().toLocaleString("en-GB",{timeZone:"Africa/Accra"})};
+  const entry={pid:"W-"+String(subs.filter(s=>s.pid.startsWith("W-")).length+1).padStart(3,"0"),name:w.name,org:w.org,sex:w.sex,prog:w.prog,pos:w.pos,email:w.email,phone:w.phone,day,type:"walk-in",time:new Date().toLocaleString("en-GB",{timeZone:"Africa/Accra"}),sig:sig};
   await sendToSheet(entry);
   subs.push(entry);saveSubs();screen="success";render();
 }
