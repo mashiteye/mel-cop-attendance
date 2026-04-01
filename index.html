@@ -138,14 +138,37 @@ async function sendToSheet(entry){
 }
 
 let remoteWalkins=[];
-async function loadRemoteWalkins(){
+let newRegistrants=[];
+async function loadRemoteData(){
   try{
+    // Load new Google Form registrations
+    const furl="https://docs.google.com/spreadsheets/d/1yIkDCX5gAR-uOFmpjy-HQejGIsEDfbnFWNh4vXcAA2Q/export?format=csv&gid=0";
+    const fr=await fetch(furl);
+    if(fr.ok){
+      const ft=await fr.text();
+      const fl=ft.split("\n").filter(l=>l.trim());
+      const existingNames=P.map(p=>p.name.toLowerCase().trim());
+      newRegistrants=[];
+      for(let i=1;i<fl.length;i++){
+        const vals=[];let cur="",inQ=false;
+        for(const ch of fl[i]){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){vals.push(cur.trim().replace(/^"|"$/g,""));cur="";}else cur+=ch;}
+        vals.push(cur.trim().replace(/^"|"$/g,""));
+        const name=vals[1]||"";
+        if(!name||existingNames.includes(name.toLowerCase().trim()))continue;
+        existingNames.push(name.toLowerCase().trim());
+        newRegistrants.push({id:"MEL-"+String(P.length+newRegistrants.length+1).padStart(3,"0"),name:name,sex:vals[2]||"",org:vals[3]||"",prog:vals[4]||"",pos:vals[5]||"",email:vals[6]||"",phone:vals[7]||""});
+      }
+      console.log("Loaded "+newRegistrants.length+" new registrants from form");
+    }
+  }catch(e){console.log("Could not load form responses:",e)}
+  try{
+    // Load walk-ins from Attendance sheet
     const url="https://docs.google.com/spreadsheets/d/1yIkDCX5gAR-uOFmpjy-HQejGIsEDfbnFWNh4vXcAA2Q/export?format=csv&gid=1249423105";
     const r=await fetch(url);
     if(!r.ok)throw new Error("Sheet fetch failed: "+r.status);
     const text=await r.text();
     const lines=text.split("\n").filter(l=>l.trim());
-    if(lines.length<2)return;
+    if(lines.length<2){render();return}
     const seen={};
     remoteWalkins=[];
     for(let i=1;i<lines.length;i++){
@@ -161,10 +184,10 @@ async function loadRemoteWalkins(){
       remoteWalkins.push({id:pid,name:name,org:vals[3]||"",sex:vals[4]||"",prog:vals[5]||"",pos:vals[6]||"",email:vals[7]||"",phone:vals[8]||"",_walkin:true});
     }
     console.log("Loaded "+remoteWalkins.length+" walk-ins from sheet");
-    render();
   }catch(e){console.log("Could not load remote walkins:",e)}
+  render();
 }
-loadRemoteWalkins();
+loadRemoteData();
 
 // Signature pad
 let sigCanvas,sigCtx,sigDrawing=false,sigSigned=false;
@@ -201,7 +224,7 @@ function render(){
       <div class="hdr" id="hdrTap">
         <div class="hdr-sub">MASTERCARD FOUNDATION</div>
         <div class="hdr-title">Ghana MEL CoP Convening</div>
-        <div class="hdr-info">${P.length} registered + ${remoteWalkins.length} walk-ins loaded · <span onclick="event.stopPropagation();loadRemoteWalkins().then(render)" style="text-decoration:underline;cursor:pointer">Refresh</span></div>
+        <div class="hdr-info">${P.length+newRegistrants.length} registered + ${remoteWalkins.length} walk-ins loaded · <span onclick="event.stopPropagation();loadRemoteData()" style="text-decoration:underline;cursor:pointer">Refresh</span></div>
       </div>
       <div class="counters">
         <div class="counter"><div class="counter-num" style="color:#FF671B">${dc("Day 1")}</div><div class="counter-label">Day 1</div></div>
@@ -307,7 +330,7 @@ function doLookup(){
   const t=v.trim().toUpperCase();
   if(!t){showErr("Enter a code");return}
   const num=parseInt(t.replace(/\D/g,""),10);
-  let m=P.find(p=>parseInt(p.id.replace(/\D/g,""),10)===num);
+  let m=P.concat(newRegistrants).find(p=>parseInt(p.id.replace(/\D/g,""),10)===num);
   if(!m){m=getWalkins().find(w=>{const wn=parseInt(w.id.replace(/\D/g,""),10);return w.id.toUpperCase()===t||wn===num})}
   if(m){found=m;screen="confirm";day="";sig=null;render()}
   else showErr('Code "'+t+'" not found. Try name search.');
@@ -317,7 +340,7 @@ function doSearch(){
   const v=($("searchInp")||{}).value||"";
   const t=v.trim().toLowerCase();
   if(t.length<2){showErr("Type at least 2 characters");return}
-  const allP=P.concat(getWalkins());
+  const allP=P.concat(newRegistrants).concat(getWalkins());
   const r=allP.filter(p=>p.name.toLowerCase().includes(t)||p.org.toLowerCase().includes(t));
   const rd=$("results");
   if(!r.length){showErr("No match. Try different spelling or register as walk-in.");if(rd)rd.innerHTML="";return}
@@ -325,7 +348,7 @@ function doSearch(){
   if(rd)rd.innerHTML=`<div style="max-height:250px;overflow-y:auto;border:1px solid #e5e5e5;border-radius:10px">${r.map((p,i)=>`<div class="result-item" onclick="selectSearchResult('${p.id}')"><div class="result-name">${p.name}</div><div class="result-meta">${p.id} · ${p.org}</div></div>`).join("")}</div>`;
 }
 function selectSearchResult(id){
-  const allP=P.concat(getWalkins());
+  const allP=P.concat(newRegistrants).concat(getWalkins());
   found=allP.find(p=>p.id===id);
   if(found){screen="confirm";day="";sig=null;render()}
 }
