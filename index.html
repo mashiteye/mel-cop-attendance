@@ -137,6 +137,16 @@ async function sendToSheet(entry){
   try{await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({...entry,sig:sig})});return true}catch(e){return false}
 }
 
+let remoteWalkins=[];
+async function loadRemoteWalkins(){
+  try{
+    const r=await fetch(SCRIPT_URL);
+    const d=await r.json();
+    if(d.walkins)remoteWalkins=d.walkins.map(w=>({...w,_walkin:true}));
+  }catch(e){console.log("Could not load remote walkins:",e)}
+}
+loadRemoteWalkins();
+
 // Signature pad
 let sigCanvas,sigCtx,sigDrawing=false,sigSigned=false;
 function initSig(){
@@ -172,7 +182,7 @@ function render(){
       <div class="hdr" id="hdrTap">
         <div class="hdr-sub">MASTERCARD FOUNDATION</div>
         <div class="hdr-title">Ghana MEL CoP Convening</div>
-        <div class="hdr-info">${P.length} registered · Live sync to Google Sheets</div>
+        <div class="hdr-info">${P.length} registered + ${remoteWalkins.length} walk-ins loaded · <span onclick="event.stopPropagation();loadRemoteWalkins().then(render)" style="text-decoration:underline;cursor:pointer">Refresh</span></div>
       </div>
       <div class="counters">
         <div class="counter"><div class="counter-num" style="color:#FF671B">${dc("Day 1")}</div><div class="counter-label">Day 1</div></div>
@@ -268,7 +278,9 @@ function showErr(msg){const e=$("errMsg");if(e)e.innerHTML=msg?`<div class="err"
 
 function getWalkins(){
   const seen={};
-  return subs.filter(s=>s.pid.startsWith("W-")).filter(s=>{if(seen[s.pid])return false;seen[s.pid]=true;return true}).map(s=>({id:s.pid,name:s.name,sex:s.sex||"",org:s.org,prog:s.prog||"",pos:s.pos||"",email:s.email||"",phone:s.phone||"",_walkin:true}));
+  const local=subs.filter(s=>s.pid.startsWith("W-")).filter(s=>{if(seen[s.pid])return false;seen[s.pid]=true;return true}).map(s=>({id:s.pid,name:s.name,sex:s.sex||"",org:s.org,prog:s.prog||"",pos:s.pos||"",email:s.email||"",phone:s.phone||"",_walkin:true}));
+  remoteWalkins.forEach(w=>{if(!seen[w.id]){seen[w.id]=true;local.push(w)}});
+  return local;
 }
 
 function doLookup(){
