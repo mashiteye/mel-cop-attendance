@@ -154,9 +154,11 @@ async function loadRemoteWalkins(){
       vals.push(cur.trim().replace(/^"|"$/g,""));
       const pid=vals[1]||"";
       if(!pid.startsWith("W-"))continue;
-      if(seen[pid])continue;
-      seen[pid]=true;
-      remoteWalkins.push({id:pid,name:vals[2]||"",org:vals[3]||"",sex:vals[4]||"",prog:vals[5]||"",pos:vals[6]||"",email:vals[7]||"",phone:vals[8]||"",_walkin:true});
+      const name=vals[2]||"";
+      const nameKey=name.toLowerCase().trim();
+      if(!nameKey||seen[nameKey])continue;
+      seen[nameKey]=true;
+      remoteWalkins.push({id:pid,name:name,org:vals[3]||"",sex:vals[4]||"",prog:vals[5]||"",pos:vals[6]||"",email:vals[7]||"",phone:vals[8]||"",_walkin:true});
     }
     console.log("Loaded "+remoteWalkins.length+" walk-ins from sheet");
     render();
@@ -295,8 +297,8 @@ function showErr(msg){const e=$("errMsg");if(e)e.innerHTML=msg?`<div class="err"
 
 function getWalkins(){
   const seen={};
-  const local=subs.filter(s=>s.pid.startsWith("W-")).filter(s=>{if(seen[s.pid])return false;seen[s.pid]=true;return true}).map(s=>({id:s.pid,name:s.name,sex:s.sex||"",org:s.org,prog:s.prog||"",pos:s.pos||"",email:s.email||"",phone:s.phone||"",_walkin:true}));
-  remoteWalkins.forEach(w=>{if(!seen[w.id]){seen[w.id]=true;local.push(w)}});
+  const local=subs.filter(s=>s.pid.startsWith("W-")).filter(s=>{const k=s.name.toLowerCase().trim();if(seen[k])return false;seen[k]=true;return true}).map(s=>({id:s.pid,name:s.name,sex:s.sex||"",org:s.org,prog:s.prog||"",pos:s.pos||"",email:s.email||"",phone:s.phone||"",_walkin:true}));
+  remoteWalkins.forEach(w=>{const k=w.name.toLowerCase().trim();if(!seen[k]){seen[k]=true;local.push(w)}});
   return local;
 }
 
