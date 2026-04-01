@@ -159,6 +159,7 @@ async function loadRemoteWalkins(){
       remoteWalkins.push({id:pid,name:vals[2]||"",org:vals[3]||"",sex:vals[4]||"",prog:vals[5]||"",pos:vals[6]||"",email:vals[7]||"",phone:vals[8]||"",_walkin:true});
     }
     console.log("Loaded "+remoteWalkins.length+" walk-ins from sheet");
+    render();
   }catch(e){console.log("Could not load remote walkins:",e)}
 }
 loadRemoteWalkins();
