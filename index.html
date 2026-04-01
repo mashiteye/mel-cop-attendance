@@ -140,9 +140,23 @@ async function sendToSheet(entry){
 let remoteWalkins=[];
 async function loadRemoteWalkins(){
   try{
-    const r=await fetch(SCRIPT_URL);
-    const d=await r.json();
-    if(d.walkins)remoteWalkins=d.walkins.map(w=>({...w,_walkin:true}));
+    const url="https://docs.google.com/spreadsheets/d/1yIkDCX5gAR-uOFmpjy-HQejGIsEDfbnFWNh4vXcAA2Q/gviz/tq?tqx=out:csv&sheet=Attendance";
+    const r=await fetch(url);
+    const text=await r.text();
+    const lines=text.split("\n").filter(l=>l.trim());
+    if(lines.length<2)return;
+    const seen={};
+    remoteWalkins=[];
+    for(let i=1;i<lines.length;i++){
+      const vals=[];let cur="",inQ=false;
+      for(const ch of lines[i]){if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){vals.push(cur.trim().replace(/^"|"$/g,""));cur="";}else cur+=ch;}
+      vals.push(cur.trim().replace(/^"|"$/g,""));
+      const pid=vals[1]||"";
+      if(!pid.startsWith("W-"))continue;
+      if(seen[pid])continue;
+      seen[pid]=true;
+      remoteWalkins.push({id:pid,name:vals[2]||"",org:vals[3]||"",sex:vals[4]||"",prog:vals[5]||"",pos:vals[6]||"",email:vals[7]||"",phone:vals[8]||"",_walkin:true});
+    }
   }catch(e){console.log("Could not load remote walkins:",e)}
 }
 loadRemoteWalkins();
